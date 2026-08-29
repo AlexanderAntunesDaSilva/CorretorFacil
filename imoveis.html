@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CorretorFácil — Imóveis</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar"><div id="sidebar-mount" data-active="imoveis"></div></aside>
+  <main class="main">
+    <div class="page-eyebrow">Cadastro</div>
+    <h1 class="page-title">Imóveis</h1>
+    <p class="page-sub">Cadastre os imóveis que você representa, com região e características principais, para usá-los na agenda de visitas.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Novo imóvel</div>
+        <form id="form-imovel">
+          <div class="field">
+            <label for="titulo">Título</label>
+            <input id="titulo" type="text" placeholder="Ex: Apartamento 2 quartos - Centro" required>
+          </div>
+          <div class="row-2">
+            <div class="field">
+              <label for="tipo">Tipo</label>
+              <select id="tipo">
+                <option>Apartamento</option>
+                <option>Casa</option>
+                <option>Kitnet</option>
+                <option>Terreno</option>
+                <option>Comercial</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="valor">Valor (R$)</label>
+              <input id="valor" type="number" min="0" step="1" placeholder="280000" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="regiao">Região / Bairro</label>
+            <input id="regiao" type="text" placeholder="Ex: Centro" required>
+          </div>
+          <div class="field">
+            <label for="endereco">Endereço</label>
+            <input id="endereco" type="text" placeholder="Rua, número">
+          </div>
+          <div class="field">
+            <label for="descricao">Descrição</label>
+            <textarea id="descricao" placeholder="Características principais do imóvel"></textarea>
+          </div>
+          <button type="submit">Cadastrar imóvel</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="section-title" style="margin:0;">Imóveis cadastrados <span class="badge-count" id="contador">0</span></div>
+        </div>
+        <div class="item-list" id="lista-imoveis"></div>
+      </div>
+    </div>
+
+    <footer class="app-footer">CorretorFácil — MVP desenvolvido para a Etapa 1 do projeto acadêmico.</footer>
+  </main>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  function fmtMoeda(v) { return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
+
+  function render() {
+    const imoveis = DB.listImoveis();
+    document.getElementById("contador").textContent = imoveis.length;
+    const el = document.getElementById("lista-imoveis");
+    if (imoveis.length === 0) {
+      el.innerHTML = `<div class="empty-state"><strong>Nenhum imóvel cadastrado</strong>Use o formulário ao lado para cadastrar o primeiro.</div>`;
+      return;
+    }
+    el.innerHTML = imoveis.slice().reverse().map(i => `
+      <div class="item">
+        <div>
+          <p class="item-title">${i.titulo}</p>
+          <p class="item-meta">${i.regiao} <span class="sep">•</span> ${fmtMoeda(i.valor)} <span class="sep">•</span> ${i.endereco || "sem endereço"}</p>
+          <span class="tag ochre">${i.tipo}</span>
+        </div>
+        <div class="item-actions">
+          <button class="danger" data-id="${i.id}">Remover</button>
+        </div>
+      </div>
+    `).join("");
+
+    el.querySelectorAll("button.danger").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (confirm("Remover este imóvel?")) { DB.removeImovel(btn.dataset.id); render(); }
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!DB.getCorretor()) { window.location.href = "login.html"; return; }
+    render();
+
+    document.getElementById("form-imovel").addEventListener("submit", function (e) {
+      e.preventDefault();
+      DB.addImovel({
+        titulo: document.getElementById("titulo").value.trim(),
+        tipo: document.getElementById("tipo").value,
+        valor: parseFloat(document.getElementById("valor").value || 0),
+        regiao: document.getElementById("regiao").value.trim(),
+        endereco: document.getElementById("endereco").value.trim(),
+        descricao: document.getElementById("descricao").value.trim(),
+      });
+      this.reset();
+      render();
+    });
+  });
+</script>
+</body>
+</html>

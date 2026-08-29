@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CorretorFácil — Entrar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; background: var(--ink-900); }
+  .login-card {
+    width: 380px; background: var(--paper-raised); border-radius: 10px;
+    padding: 36px 32px; box-shadow: var(--shadow-md);
+  }
+  .login-brand { font-family: var(--font-display); font-size: 28px; color: var(--ink-900); margin-bottom: 4px; }
+  .login-brand .dot { color: var(--ochre); }
+  .login-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-brand">CorretorFácil<span class="dot">.</span></div>
+    <p class="login-sub">Organize suas visitas, imóveis e clientes em um só lugar.</p>
+    <form id="form-login">
+      <div class="field">
+        <label for="nome">Seu nome</label>
+        <input id="nome" type="text" placeholder="Ex: Alexander Antunes" required>
+      </div>
+      <button type="submit" style="width:100%;">Entrar</button>
+    </form>
+    <p class="hint" style="margin-top:16px;">Protótipo do MVP — os dados ficam salvos apenas neste navegador (localStorage), sem necessidade de servidor.</p>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script>
+    document.getElementById("form-login").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const nome = document.getElementById("nome").value.trim();
+      if (!nome) return;
+      DB.setCorretor(nome);
+      DB.seedIfEmpty();
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>

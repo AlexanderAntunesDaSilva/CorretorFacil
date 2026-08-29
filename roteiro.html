@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CorretorFácil — Roteiro do Dia</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar"><div id="sidebar-mount" data-active="roteiro"></div></aside>
+  <main class="main">
+    <div class="page-eyebrow">Deslocamento</div>
+    <h1 class="page-title">Roteiro do Dia</h1>
+    <p class="page-sub">As visitas do dia selecionado, agrupadas por região, para você planejar o deslocamento com menos idas e vindas.</p>
+
+    <div class="card" style="margin-bottom:24px;">
+      <div class="field" style="max-width:220px; margin-bottom:0;">
+        <label for="data-filtro">Selecionar data</label>
+        <input id="data-filtro" type="date">
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="roteiro-conteudo"></div>
+    </div>
+
+    <footer class="app-footer">CorretorFácil — MVP desenvolvido para a Etapa 1 do projeto acadêmico.</footer>
+  </main>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  function render() {
+    const dataSel = document.getElementById("data-filtro").value;
+    const visitas = DB.listVisitas().filter(v => v.data === dataSel);
+    const el = document.getElementById("roteiro-conteudo");
+
+    if (visitas.length === 0) {
+      el.innerHTML = `<div class="empty-state"><strong>Nenhuma visita nesta data</strong>Escolha outra data ou agende novas visitas.</div>`;
+      return;
+    }
+
+    // Agrupa por região do imóvel
+    const grupos = {};
+    visitas.forEach(v => {
+      const im = DB.getImovel(v.imovelId);
+      const regiao = im ? im.regiao : "Sem região definida";
+      grupos[regiao] = grupos[regiao] || [];
+      grupos[regiao].push({ v, im });
+    });
+
+    el.innerHTML = Object.keys(grupos).map(regiao => `
+      <div class="route-region-label">${regiao} <span class="badge-count">${grupos[regiao].length}</span></div>
+      <div class="route-track">
+        ${grupos[regiao].map(({v, im}) => `
+          <div class="route-stop">
+            <div class="route-time">${v.hora}</div>
+            <p class="item-title" style="margin:2px 0 2px 0;">${v.cliente}</p>
+            <p class="item-meta">${im ? im.titulo : "Imóvel removido"}${im && im.endereco ? " · " + im.endereco : ""}</p>
+          </div>
+        `).join("")}
+      </div>
+    `).join("");
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!DB.getCorretor()) { window.location.href = "login.html"; return; }
+    document.getElementById("data-filtro").valueAsDate = new Date();
+    render();
+    document.getElementById("data-filtro").addEventListener("change", render);
+  });
+</script>
+</body>
+</html>

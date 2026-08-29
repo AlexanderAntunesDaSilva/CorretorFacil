@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CorretorFácil — Agenda de Visitas</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar"><div id="sidebar-mount" data-active="agenda"></div></aside>
+  <main class="main">
+    <div class="page-eyebrow">Organização</div>
+    <h1 class="page-title">Agenda de Visitas</h1>
+    <p class="page-sub">Marque as visitas com data, horário e cliente, vinculadas a um imóvel já cadastrado.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Nova visita</div>
+        <form id="form-visita">
+          <div class="field">
+            <label for="imovel">Imóvel</label>
+            <select id="imovel" required></select>
+          </div>
+          <div class="field">
+            <label for="cliente">Cliente</label>
+            <input id="cliente" type="text" placeholder="Nome do cliente" required>
+          </div>
+          <div class="field">
+            <label for="telefone">Telefone</label>
+            <input id="telefone" type="text" placeholder="(47) 99999-9999">
+          </div>
+          <div class="row-2">
+            <div class="field">
+              <label for="data">Data</label>
+              <input id="data" type="date" required>
+            </div>
+            <div class="field">
+              <label for="hora">Horário</label>
+              <input id="hora" type="time" required>
+            </div>
+          </div>
+          <button type="submit">Agendar visita</button>
+        </form>
+        <p class="hint" id="aviso-sem-imovel" style="display:none;">Cadastre um imóvel antes de agendar uma visita.</p>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="section-title" style="margin:0;">Visitas agendadas <span class="badge-count" id="contador">0</span></div>
+        </div>
+        <div class="item-list" id="lista-visitas"></div>
+      </div>
+    </div>
+
+    <footer class="app-footer">CorretorFácil — MVP desenvolvido para a Etapa 1 do projeto acadêmico.</footer>
+  </main>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  function fmtData(iso) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
+
+  function preencherImoveis() {
+    const sel = document.getElementById("imovel");
+    const imoveis = DB.listImoveis();
+    document.getElementById("aviso-sem-imovel").style.display = imoveis.length === 0 ? "block" : "none";
+    sel.innerHTML = imoveis.map(i => `<option value="${i.id}">${i.titulo} — ${i.regiao}</option>`).join("");
+  }
+
+  function render() {
+    const visitas = DB.listVisitas();
+    document.getElementById("contador").textContent = visitas.length;
+    const el = document.getElementById("lista-visitas");
+    if (visitas.length === 0) {
+      el.innerHTML = `<div class="empty-state"><strong>Nenhuma visita agendada</strong>Use o formulário ao lado para marcar a primeira.</div>`;
+      return;
+    }
+    el.innerHTML = visitas.map(v => {
+      const im = DB.getImovel(v.imovelId);
+      return `<div class="item">
+        <div>
+          <p class="item-title">${fmtData(v.data)} · ${v.hora} — ${v.cliente}</p>
+          <p class="item-meta">${im ? im.titulo : "Imóvel removido"} <span class="sep">•</span> ${im ? im.regiao : "-"} ${v.telefone ? "<span class='sep'>•</span> " + v.telefone : ""}</p>
+        </div>
+        <div class="item-actions">
+          <button class="danger" data-id="${v.id}">Cancelar</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    el.querySelectorAll("button.danger").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (confirm("Cancelar esta visita?")) { DB.removeVisita(btn.dataset.id); render(); }
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!DB.getCorretor()) { window.location.href = "login.html"; return; }
+    preencherImoveis();
+    render();
+    document.getElementById("data").valueAsDate = new Date();
+
+    document.getElementById("form-visita").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const imovelId = document.getElementById("imovel").value;
+      if (!imovelId) { alert("Cadastre um imóvel antes de agendar."); return; }
+      DB.addVisita({
+        imovelId,
+        cliente: document.getElementById("cliente").value.trim(),
+        telefone: document.getElementById("telefone").value.trim(),
+        data: document.getElementById("data").value,
+        hora: document.getElementById("hora").value,
+        status: "agendada",
+      });
+      this.reset();
+      document.getElementById("data").valueAsDate = new Date();
+      preencherImoveis();
+      render();
+    });
+  });
+</script>
+</body>
+</html>

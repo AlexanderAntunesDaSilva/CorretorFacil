@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CorretorFácil — Ficha de Visita</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar"><div id="sidebar-mount" data-active="ficha"></div></aside>
+  <main class="main">
+    <div class="page-eyebrow">Registro</div>
+    <h1 class="page-title">Ficha de Visita</h1>
+    <p class="page-sub">Depois de realizar a visita, registre rapidamente o retorno do cliente — pensado para ser preenchido pelo celular, ainda em campo.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Preencher ficha</div>
+        <form id="form-ficha">
+          <div class="field">
+            <label for="visita">Visita realizada</label>
+            <select id="visita" required></select>
+          </div>
+          <div class="field">
+            <label for="interesse">Nível de interesse do cliente</label>
+            <select id="interesse">
+              <option value="alto">Alto — quer avançar</option>
+              <option value="medio">Médio — vai pensar</option>
+              <option value="baixo">Baixo — não se interessou</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="observacoes">Observações da visita</label>
+            <textarea id="observacoes" placeholder="Pontos observados, objeções, próximos passos combinados..."></textarea>
+          </div>
+          <button type="submit">Salvar ficha</button>
+        </form>
+        <p class="hint" id="aviso-sem-visita" style="display:none;">Todas as visitas já têm ficha preenchida, ou não há visitas agendadas ainda.</p>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Fichas registradas <span class="badge-count" id="contador">0</span></div>
+        <div class="item-list" id="lista-fichas"></div>
+      </div>
+    </div>
+
+    <footer class="app-footer">CorretorFácil — MVP desenvolvido para a Etapa 1 do projeto acadêmico.</footer>
+  </main>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  function fmtData(iso) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
+  const rotuloInteresse = { alto: "Interesse alto", medio: "Interesse médio", baixo: "Interesse baixo" };
+
+  function preencherVisitasPendentes() {
+    const sel = document.getElementById("visita");
+    const fichas = DB.listFichas();
+    const pendentes = DB.listVisitas().filter(v => !fichas.some(f => f.visitaId === v.id));
+    document.getElementById("aviso-sem-visita").style.display = pendentes.length === 0 ? "block" : "none";
+    sel.innerHTML = pendentes.map(v => {
+      const im = DB.getImovel(v.imovelId);
+      return `<option value="${v.id}">${fmtData(v.data)} ${v.hora} — ${v.cliente} (${im ? im.titulo : "imóvel removido"})</option>`;
+    }).join("");
+  }
+
+  function render() {
+    const fichas = DB.listFichas().slice().reverse();
+    document.getElementById("contador").textContent = fichas.length;
+    const el = document.getElementById("lista-fichas");
+    if (fichas.length === 0) {
+      el.innerHTML = `<div class="empty-state"><strong>Nenhuma ficha registrada</strong>Preencha a primeira ficha ao lado.</div>`;
+      return;
+    }
+    el.innerHTML = fichas.map(f => {
+      const v = DB.getVisita(f.visitaId);
+      return `<div class="item">
+        <div>
+          <p class="item-title">${v ? v.cliente : "Cliente"}</p>
+          <p class="item-meta">${v ? fmtData(v.data) + " · " + v.hora : ""}</p>
+          <p class="item-meta">${f.observacoes || "sem observações"}</p>
+          <span class="tag ${f.interesse === 'alto' ? '' : 'ochre'}">${rotuloInteresse[f.interesse] || f.interesse}</span>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!DB.getCorretor()) { window.location.href = "login.html"; return; }
+    preencherVisitasPendentes();
+    render();
+
+    document.getElementById("form-ficha").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const visitaId = document.getElementById("visita").value;
+      if (!visitaId) { alert("Não há visita selecionada."); return; }
+      DB.addFicha({
+        visitaId,
+        interesse: document.getElementById("interesse").value,
+        observacoes: document.getElementById("observacoes").value.trim(),
+      });
+      this.reset();
+      preencherVisitasPendentes();
+      render();
+    });
+  });
+</script>
+</body>
+</html>

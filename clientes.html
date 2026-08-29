@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CorretorFácil — Histórico de Clientes</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar"><div id="sidebar-mount" data-active="clientes"></div></aside>
+  <main class="main">
+    <div class="page-eyebrow">Relacionamento</div>
+    <h1 class="page-title">Histórico de Clientes</h1>
+    <p class="page-sub">Todos os clientes que já tiveram visitas agendadas, com o total de visitas e a última interação registrada.</p>
+
+    <div class="card">
+      <div class="item-list" id="lista-clientes"></div>
+    </div>
+
+    <footer class="app-footer">CorretorFácil — MVP desenvolvido para a Etapa 1 do projeto acadêmico.</footer>
+  </main>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  function fmtData(iso) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!DB.getCorretor()) { window.location.href = "login.html"; return; }
+
+    const visitas = DB.listVisitas();
+    const fichas = DB.listFichas();
+    const el = document.getElementById("lista-clientes");
+
+    if (visitas.length === 0) {
+      el.innerHTML = `<div class="empty-state"><strong>Nenhum cliente ainda</strong>Os clientes aparecem aqui assim que você agendar visitas.</div>`;
+      return;
+    }
+
+    const porCliente = {};
+    visitas.forEach(v => {
+      porCliente[v.cliente] = porCliente[v.cliente] || { visitas: [], telefone: v.telefone };
+      porCliente[v.cliente].visitas.push(v);
+    });
+
+    el.innerHTML = Object.keys(porCliente).sort().map(nome => {
+      const info = porCliente[nome];
+      const ultima = info.visitas[info.visitas.length - 1];
+      const im = DB.getImovel(ultima.imovelId);
+      const totalFichas = info.visitas.filter(v => fichas.some(f => f.visitaId === v.id)).length;
+      return `<div class="item">
+        <div>
+          <p class="item-title">${nome}</p>
+          <p class="item-meta">${info.telefone || "sem telefone"} <span class="sep">•</span> ${info.visitas.length} visita(s) <span class="sep">•</span> ${totalFichas} ficha(s) preenchida(s)</p>
+          <p class="item-meta">Última visita: ${fmtData(ultima.data)} — ${im ? im.titulo : "imóvel removido"}</p>
+        </div>
+      </div>`;
+    }).join("");
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CorretorFácil — Início</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar"><div id="sidebar-mount" data-active="inicio"></div></aside>
+  <main class="main">
+    <div class="page-eyebrow">Painel</div>
+    <h1 class="page-title">Bom te ver por aqui<span id="saudacao-nome"></span></h1>
+    <p class="page-sub">Um resumo rápido da sua rotina de hoje: visitas marcadas, imóveis cadastrados e clientes atendidos.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Resumo</div>
+        <div class="item-list" id="resumo-cards"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Próximas visitas de hoje</div>
+        <div class="item-list" id="proximas-visitas"></div>
+      </div>
+    </div>
+
+    <footer class="app-footer">CorretorFácil — MVP desenvolvido para a Etapa 1 do projeto acadêmico.</footer>
+  </main>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  function fmtMoeda(v) {
+    return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  function fmtData(iso) {
+    const [y,m,d] = iso.split("-");
+    return `${d}/${m}/${y}`;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const corretor = DB.getCorretor();
+    if (!corretor) { window.location.href = "login.html"; return; }
+    document.getElementById("saudacao-nome").textContent = ", " + corretor.nome.split(" ")[0];
+
+    const imoveis = DB.listImoveis();
+    const visitas = DB.listVisitas();
+    const hojeIso = new Date().toISOString().slice(0,10);
+    const visitasHoje = visitas.filter(v => v.data === hojeIso);
+    const clientesUnicos = new Set(visitas.map(v => v.cliente));
+
+    document.getElementById("resumo-cards").innerHTML = `
+      <div class="item">
+        <div><p class="item-title">Imóveis cadastrados</p><p class="item-meta">Ativos na plataforma</p></div>
+        <div style="font-family:var(--font-display); font-size:26px; color:var(--ink-900);">${imoveis.length}</div>
+      </div>
+      <div class="item">
+        <div><p class="item-title">Visitas agendadas</p><p class="item-meta">No total</p></div>
+        <div style="font-family:var(--font-display); font-size:26px; color:var(--ink-900);">${visitas.length}</div>
+      </div>
+      <div class="item">
+        <div><p class="item-title">Clientes no histórico</p><p class="item-meta">Contatos únicos</p></div>
+        <div style="font-family:var(--font-display); font-size:26px; color:var(--ink-900);">${clientesUnicos.size}</div>
+      </div>
+    `;
+
+    const listaEl = document.getElementById("proximas-visitas");
+    if (visitasHoje.length === 0) {
+      listaEl.innerHTML = `<div class="empty-state"><strong>Nenhuma visita hoje</strong>Cadastre uma nova visita na Agenda.</div>`;
+    } else {
+      listaEl.innerHTML = visitasHoje.map(v => {
+        const im = DB.getImovel(v.imovelId);
+        return `<div class="item">
+          <div>
+            <p class="item-title">${v.hora} · ${v.cliente}</p>
+            <p class="item-meta">${im ? im.titulo : "Imóvel removido"} <span class="sep">•</span> ${im ? im.regiao : "-"}</p>
+          </div>
+        </div>`;
+      }).join("");
+    }
+  });
+</script>
+</body>
+</html>
