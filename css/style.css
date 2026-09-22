@@ -199,6 +199,17 @@ button.secondary:hover { background: var(--ink-050); }
 button.danger { background: var(--brick); }
 button.danger:hover { background: #953a26; }
 
+button.danger:hover { background: #953a26; }
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  background: var(--sage-bg);
+  color: var(--sage);
+  border: 1px solid var(--sage);
+}
+.btn-whatsapp:hover { background: var(--sage); color: #fff; }
+
 /* ---------- Lists / items ---------- */
 .item-list { display: flex; flex-direction: column; gap: 10px; }
 .item {
@@ -233,7 +244,7 @@ button.danger:hover { background: #953a26; }
 }
 .tag.ochre { background: #f6ecd9; color: var(--ochre-dark); }
 .item-actions { display: flex; gap: 8px; flex-shrink: 0; }
-.item-actions button { padding: 7px 12px; font-size: 13px; }
+.item-actions button, .item-actions .btn-whatsapp { padding: 7px 12px; font-size: 13px; }
 
 .empty-state {
   border: 1px dashed var(--line);
