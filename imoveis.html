@@ -111,13 +111,16 @@
     document.getElementById("form-imovel").addEventListener("submit", function (e) {
       e.preventDefault();
       DB.addImovel({
-        titulo: document.getElementById("titulo").value.trim(),
-        tipo: document.getElementById("tipo").value,
-        valor: parseFloat(document.getElementById("valor").value || 0),
-        regiao: document.getElementById("regiao").value.trim(),
-        endereco: document.getElementById("endereco").value.trim(),
-        descricao: document.getElementById("descricao").value.trim(),
-      });
+  titulo: document.getElementById("titulo").value.trim(),
+  tipo: document.getElementById("tipo").value,
+  valor: parseFloat(document.getElementById("valor").value || 0),
+  regiao: document.getElementById("regiao").value.trim(),
+  endereco: document.getElementById("endereco").value.trim(),
+  descricao: document.getElementById("descricao").value.trim(),
+
+  // Novo campo: informações das áreas comuns
+  condominio: document.getElementById("condominio").value.trim(),
+});
       this.reset();
       render();
     });
