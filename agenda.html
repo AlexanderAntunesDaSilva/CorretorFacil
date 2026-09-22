@@ -59,6 +59,15 @@
 
 <script src="js/storage.js"></script>
 <script src="js/nav.js"></script>
+    function fmtData(iso) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
+
+  function waLink(tel) {
+    if (!tel) return null;
+    const digits = tel.replace(/\D/g, "");
+    if (!digits) return null;
+    const comDDI = digits.startsWith("55") ? digits : `55${digits}`;
+    return `https://wa.me/${comDDI}`;
+  }
 <script>
   function fmtData(iso) { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; }
 
@@ -69,17 +78,20 @@
     sel.innerHTML = imoveis.map(i => `<option value="${i.id}">${i.titulo} — ${i.regiao}</option>`).join("");
   }
 
-  function render() {
-    const visitas = DB.listVisitas();
-    document.getElementById("contador").textContent = visitas.length;
-    const el = document.getElementById("lista-visitas");
-    if (visitas.length === 0) {
-      el.innerHTML = `<div class="empty-state"><strong>Nenhuma visita agendada</strong>Use o formulário ao lado para marcar a primeira.</div>`;
-      return;
-    }
-    el.innerHTML = visitas.map(v => {
+      el.innerHTML = visitas.map(v => {
       const im = DB.getImovel(v.imovelId);
+      const wa = waLink(v.telefone);
       return `<div class="item">
+        <div>
+          <p class="item-title">${fmtData(v.data)} · ${v.hora} — ${v.cliente}</p>
+          <p class="item-meta">${im ? im.titulo : "Imóvel removido"} <span class="sep">•</span> ${im ? im.regiao : "-"} ${v.telefone ? "<span class='sep'>•</span> " + v.telefone : ""}</p>
+        </div>
+        <div class="item-actions">
+          ${wa ? `<a class="btn-whatsapp" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}
+          <button class="danger" data-id="${v.id}">Cancelar</button>
+        </div>
+      </div>`;
+    }).join("");
         <div>
           <p class="item-title">${fmtData(v.data)} · ${v.hora} — ${v.cliente}</p>
           <p class="item-meta">${im ? im.titulo : "Imóvel removido"} <span class="sep">•</span> ${im ? im.regiao : "-"} ${v.telefone ? "<span class='sep'>•</span> " + v.telefone : ""}</p>
