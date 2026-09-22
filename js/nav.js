@@ -27,7 +27,7 @@
       <nav class="nav">${navHtml}</nav>
       <div class="sidebar-footer">
         ${corretor ? `<div class="user-chip">👤 ${corretor.nome}</div>` : ""}
-        <div style="margin-top:10px;">MVP — Etapa 1<br>v0.1.0</div>
+        <div style="margin-top:10px;">MVP — Etapa 2<br>v0.2.0</div>
       </div>
     `;
   }
