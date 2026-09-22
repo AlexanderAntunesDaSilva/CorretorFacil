@@ -51,12 +51,32 @@
       const im = DB.getImovel(ultima.imovelId);
       const totalFichas = info.visitas.filter(v => fichas.some(f => f.visitaId === v.id)).length;
       return `<div class="item">
-        <div>
-          <p class="item-title">${nome}</p>
-          <p class="item-meta">${info.telefone || "sem telefone"} <span class="sep">•</span> ${info.visitas.length} visita(s) <span class="sep">•</span> ${totalFichas} ficha(s) preenchida(s)</p>
-          <p class="item-meta">Última visita: ${fmtData(ultima.data)} — ${im ? im.titulo : "imóvel removido"}</p>
-        </div>
-      </div>`;
+  <div>
+    <p class="item-title">${nome}</p>
+
+    <p class="item-meta">
+      ${info.telefone || "sem telefone"}
+      <span class="sep">•</span>
+      ${info.visitas.length} visita(s)
+      <span class="sep">•</span>
+      ${totalFichas} ficha(s) preenchida(s)
+    </p>
+
+    <p class="item-meta">
+      Última visita: ${fmtData(ultima.data)} — ${im ? im.titulo : "imóvel removido"}
+    </p>
+  </div>
+
+  <div class="item-actions">
+    ${
+      info.telefone
+        ? `<a href="https://wa.me/55${info.telefone.replace(/\D/g, '')}" target="_blank">
+             <button type="button">WhatsApp</button>
+           </a>`
+        : ""
+    }
+  </div>
+</div>`;
     }).join("");
   });
 </script>
